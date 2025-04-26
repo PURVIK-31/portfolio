@@ -17,6 +17,14 @@ import { person, about, social } from "@/app/resources/content";
 import React from "react";
 import { Meta, Schema } from "@/once-ui/modules";
 
+// Add image interface
+interface ImageType {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
 export async function generateMetadata() {
   return Meta.generate({
     title: about.title,
@@ -216,19 +224,19 @@ export default function About() {
                     </Column>
                     {experience.images.length > 0 && (
                       <Flex fillWidth paddingTop="m" paddingLeft="40" wrap>
-                        {experience.images.map((image, index) => (
+                        {experience.images.map((image: ImageType, index) => (
                           <Flex
                             key={index}
                             border="neutral-medium"
                             radius="m"
-                            minWidth={image.width}
-                            height={image.height}
+                            minWidth={image.width || 200}
+                            height={image.height || 150}
                           >
                             <SmartImage
                               enlarge
                               radius="m"
-                              sizes={image.width.toString()}
-                              alt={image.alt}
+                              sizes={(image.width || 200).toString()}
+                              alt={image.alt || "Work experience image"}
                               src={image.src}
                             />
                           </Flex>
@@ -280,19 +288,19 @@ export default function About() {
                     </Text>
                     {skill.images && skill.images.length > 0 && (
                       <Flex fillWidth paddingTop="m" gap="12" wrap>
-                        {skill.images.map((image, index) => (
+                        {skill.images.map((image: ImageType, index) => (
                           <Flex
                             key={index}
                             border="neutral-medium"
                             radius="m"
-                            minWidth={image.width}
-                            height={image.height}
+                            minWidth={image.width || 200}
+                            height={image.height || 150}
                           >
                             <SmartImage
                               enlarge
                               radius="m"
-                              sizes={image.width.toString()}
-                              alt={image.alt}
+                              sizes={(image.width || 200).toString()}
+                              alt={image.alt || "Skill image"}
                               src={image.src}
                             />
                           </Flex>

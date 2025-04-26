@@ -258,4 +258,28 @@ const work = {
   ]
 };
 
-export { person, social, newsletter, home, about, blog, work };
+const gallery = {
+  path: "/gallery",
+  label: "Gallery",
+  title: `Gallery – ${person.name}`,
+  description: `Photo gallery by ${person.name}`,
+  images: [
+    {
+      src: "/images/gallery/image1.jpg",
+      alt: "Gallery image 1",
+      orientation: "horizontal"
+    },
+    {
+      src: "/images/gallery/image2.jpg",
+      alt: "Gallery image 2",
+      orientation: "vertical"
+    },
+    {
+      src: "/images/gallery/image3.jpg",
+      alt: "Gallery image 3",
+      orientation: "horizontal"
+    }
+  ]
+};
+
+export { person, social, newsletter, home, about, blog, work, gallery };
