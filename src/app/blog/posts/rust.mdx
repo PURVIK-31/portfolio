@@ -1,0 +1,47 @@
+---
+title: "Getting Started with Rust for Web Developers"
+summary: "My journey learning Rust as a JavaScript developer and how it's changing my approach to programming. This guide covers the basics and explains why web developers should consider learning Rust."
+publishedAt: "2025-04-27"
+tag: "Rust"
+---
+
+## Why Rust for Web Developers?
+
+As a frontend developer primarily working with JavaScript and TypeScript, learning Rust has been an eye-opening experience. Rust's strong type system, memory safety guarantees, and performance characteristics make it a powerful tool for web developers looking to expand their skill set.
+
+## Getting Started with Rust
+
+If you're coming from JavaScript or TypeScript, here's how to start your Rust journey:
+
+1. Install Rust using rustup: [https://rustup.rs/](https://rustup.rs/)
+2. Learn the basic syntax through [The Rust Book](https://doc.rust-lang.org/book/)
+3. Practice with small projects - I started with CLI tools
+
+## Web Assembly and Rust
+
+One of the most exciting applications of Rust for web developers is WebAssembly (Wasm). Rust can be compiled to Wasm, allowing you to run high-performance code in the browser.
+
+Here's a simple example of how to use Rust with wasm-bindgen:
+
+```rust
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+pub fn fibonacci(n: u32) -> u32 {
+    match n {
+        0 => 0,
+        1 => 1,
+        _ => fibonacci(n - 1) + fibonacci(n - 2),
+    }
+}
+```
+
+## Resources for Learning Rust
+
+- [Rust by Example](https://doc.rust-lang.org/rust-by-example/)
+- [Rustlings](https://github.com/rust-lang/rustlings/)
+- [wasm-pack](https://github.com/rustwasm/wasm-pack)
+
+## Conclusion
+
+Learning Rust has made me a better programmer overall, improving how I think about types, memory management, and performance even when working with JavaScript. If you're a web developer looking to expand your skills, Rust is definitely worth the investment. 

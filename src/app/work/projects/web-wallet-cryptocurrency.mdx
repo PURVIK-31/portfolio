@@ -1,0 +1,42 @@
+---
+title: "Web-Based Cryptocurrency Wallet"
+publishedAt: "2024-11-15"
+summary: "A web-based cryptocurrency wallet for generating wallet addresses for multiple blockchains from a single seed phrase."
+images:
+  - "/images/projects/web-wallet.png"
+team:
+  - name: "Purvik Sharma"
+    role: "Frontend Developer"
+    avatar: "/images/avatar.jpg"
+    linkedIn: "https://www.linkedin.com/in/purviksharma/"
+link: "https://github.com/PURVIK-31/Web-wallet-react"
+---
+
+## Overview
+
+A web-based cryptocurrency wallet built with React and TypeScript that allows users to generate wallet addresses for multiple blockchains (Ethereum and Solana) from a single seed phrase, demonstrating the principles of hierarchical deterministic wallets.
+
+## Key Features
+
+- **Multi-Blockchain Support**: Implemented support for both Ethereum and Solana blockchain networks using their respective derivation paths.
+- **Seed Phrase Generation**: Developed functionality to generate 12 or 24-word mnemonic seed phrases for deriving multiple wallet addresses.
+- **Client-Side Security**: Built a completely client-side implementation with no server communication, ensuring security of private keys.
+- **HD Wallet Implementation**: Used BIP39 for mnemonic to seed conversion and proper derivation path handling.
+- **Address Generation**: Created a system for generating multiple sequential addresses from the same seed phrase.
+
+## Technologies Used
+
+- **React**: For building the responsive user interface
+- **TypeScript**: For type-safe application development
+- **bip39**: For mnemonic generation and seed derivation
+- **ethers.js**: For Ethereum wallet functionality
+- **@solana/web3.js**: For Solana wallet functionality
+- **TailwindCSS**: For modern, responsive styling
+
+## Challenges and Solutions
+
+The primary challenge was implementing secure cryptographic operations entirely on the client side while ensuring compatibility across different blockchain networks. By researching each blockchain's derivation standards and implementing proper key management practices, we created a wallet that provides both security and cross-chain compatibility.
+
+## Outcome
+
+The wallet serves as an educational tool demonstrating how cryptocurrency wallets work, the principles of hierarchical deterministic wallets, and cross-blockchain compatibility. It allows users to manage addresses across multiple blockchains from a single seed phrase. 
