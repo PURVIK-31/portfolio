@@ -11,8 +11,6 @@ import { Background, Column, Flex, ThemeProvider, ToastProvider } from "@/once-u
 import { opacity, SpacingToken } from "@/once-ui/types";
 import { Meta } from "@/once-ui/modules";
 import CursorProvider from "@/components/CursorProvider";
-import SmoothScroll from "@/components/SmoothScroll";
-import ScrollEnhancer from "@/components/ScrollEnhancer";
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -47,8 +45,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         font.primary.variable,
         font.secondary.variable,
         font.tertiary.variable,
-        font.code.variable,
-        "smooth-scroll"
+        font.code.variable
       )}
     >
       <head>
@@ -77,7 +74,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <ToastProvider>
           <Column style={{ minHeight: "100vh" }} as="body" fillWidth margin="0" padding="0">
             <CursorProvider />
-            <ScrollEnhancer damping={0.2} sensitivity={3.9} />
             <Background
               position="fixed"
               mask={{
