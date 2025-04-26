@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // Use a type that extends WheelEvent without conflicting with existing properties
 interface LegacyWheelProperties {
@@ -55,12 +55,49 @@ interface ScrollEnhancerProps {
   sensitivity?: number;
 }
 
+// Function to detect if the device is mobile
+const isMobileDevice = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  
+  // Check screen size first (most reliable for responsive design)
+  if (window.innerWidth <= 768) return true;
+  
+  // Fallback to user agent check
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+  
+  // Regular expression for mobile devices
+  const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+  
+  return mobileRegex.test(userAgent);
+};
+
 export default function ScrollEnhancer({ 
   damping = 0.1, 
   sensitivity = 1.0 
 }: ScrollEnhancerProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    
+    // Check if mobile on mount
+    setIsMobile(isMobileDevice());
+    
+    // Update on resize to handle orientation changes or browser resizing
+    const handleResize = () => {
+      setIsMobile(isMobileDevice());
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Skip all scrolling logic for mobile devices
+    if (typeof window === 'undefined' || isMobile) return;
 
     let targetScrollY = window.scrollY;
     let currentScrollY = window.scrollY;
@@ -129,7 +166,7 @@ export default function ScrollEnhancer({
       }
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [damping, sensitivity]);
+  }, [damping, sensitivity, isMobile]);
 
   return null;
 } 
