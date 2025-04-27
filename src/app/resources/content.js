@@ -42,18 +42,18 @@ const social = [
   {
     name: "LeetCode",
     icon: "code",
-    link: "https://leetcode.com/PURVIK-31/",
+    link: "https://leetcode.com/u/purvik31/",
   },
   {
     name: "CodeStudio",
     icon: "code",
-    link: "https://www.codingninjas.com/studio/profile/purvik31",
+    link: "https://www.naukri.com/code360/profile/purvik",
   },
 ];
 
 const home = {
   path: "/",
-  image: "/images/og/home.jpg",
+  image: "/images/profile/profile.jpg",
   label: "Home",
   title: `${person.name}'s Portfolio`,
   description: `Portfolio website showcasing my work as a ${person.role}`,
@@ -158,7 +158,7 @@ const about = {
     institutions: [
       {
         name: "RTU, Rajasthan",
-        description: <>B.Tech Computer Science and Engineering, SGPA - 9.12 (2023-2027)</>,
+        description: <>B.Tech Computer Science and Engineering      (2023-2027)</>,
       },
     ],
   },
