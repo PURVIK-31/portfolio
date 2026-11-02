@@ -282,7 +282,7 @@ export default function Home() {
             Have a project, role or idea in mind?
           </Heading>
           <Text variant="body-default-l" onBackground="neutral-weak" wrap="balance" align="center">
-            I'm {home.availability.toLowerCase()}. Drop me a line — I usually reply within a day.
+            I’m {home.availability.toLowerCase()}. Drop me a line — I usually reply within a day.
           </Text>
           <Flex gap="12" wrap horizontal="center" paddingTop="8" data-border="rounded">
             <Button href={`mailto:${person.email}`} variant="primary" size="m" prefixIcon="email">

@@ -39,7 +39,7 @@ const person = {
 // Disabled until one is set up; the home page shows a contact CTA instead.
 const newsletter = {
   display: false,
-  title: <>Subscribe to {person.firstName}'s Newsletter</>,
+  title: <>Subscribe to {person.firstName}’s Newsletter</>,
   description: (
     <>
       I occasionally write about JavaScript, TypeScript, Rust, and modern web development.
@@ -164,7 +164,7 @@ const about = {
     title: "Introduction",
     description: (
       <>
-        I'm a Jaipur-based full stack developer and Computer Science student who enjoys turning rough ideas into
+        I’m a Jaipur-based full stack developer and Computer Science student who enjoys turning rough ideas into
         fast, polished products. I work across the whole stack — React and Next.js on the front, Node.js, MongoDB
         and real-time WebSockets on the back — and reach for Python and Rust when a problem calls for data
         crunching or raw performance. I care about clean UX, measurable performance and shipping things people use.
@@ -194,7 +194,7 @@ const about = {
             Developed a full-stack internal SaaS platform using Next.js, Node.js, PostgreSQL and Drizzle ORM to streamline onboarding, payouts and operational workflows.
           </>,
           <>
-            Spearheaded the platform's ambassador initiative by onboarding 6 ambassadors through custom landing pages, resulting in 150+ expert signups and 50+ waitlist profiles.
+            Spearheaded the platform’s ambassador initiative by onboarding 6 ambassadors through custom landing pages, resulting in 150+ expert signups and 50+ waitlist profiles.
           </>,
           <>
             Built 3 production dashboards for task management, analytics, ambassador tracking and payout processing, and engineered a real-time gamified scoring system.
@@ -272,7 +272,7 @@ const about = {
         role: "Campus Ambassador",
         achievements: [
           <>
-            Representing and promoting BITS Pilani's annual technical festival at campus level.
+            Representing and promoting BITS Pilani’s annual technical festival at campus level.
           </>,
         ],
         images: []
