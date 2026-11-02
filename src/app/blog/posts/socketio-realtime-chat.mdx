@@ -1,0 +1,80 @@
+---
+title: "Building a Real-Time Chat App with Socket.io and Node.js"
+summary: "A real-time chat app needs three things: a persistent WebSocket connection (Socket.io), rooms to route messages to the right people, and authentication on the socket handshake. Here is the minimal architecture I used for one-to-one and group chat, plus how to scale it past one server."
+publishedAt: "2026-11-02"
+tags: ["Socket.io", "Node.js", "Real-time", "MongoDB"]
+faq:
+  - question: "Is Socket.io the same as WebSockets?"
+    answer: "No. Socket.io uses WebSockets as its main transport but adds its own protocol on top: automatic reconnection, rooms, acknowledgements and an HTTP long-polling fallback. A plain WebSocket client cannot talk to a Socket.io server."
+  - question: "How do you scale Socket.io across multiple servers?"
+    answer: "Use an adapter such as @socket.io/redis-adapter so that events emitted on one server are broadcast to sockets connected to other servers, and enable sticky sessions on your load balancer if long-polling is allowed."
+---
+
+When I built my [real-time chat application](/work/chatapp), the goal was simple: messages should appear instantly for one-to-one and group conversations, without refreshing. Socket.io made that straightforward. This post is the short version of what I learned.
+
+## How does a Socket.io chat app work?
+
+The browser opens one long-lived connection to the server. Instead of polling an API every few seconds, the server **pushes** events the moment something happens. Each conversation becomes a **room**, and a message sent to a room reaches every socket that joined it.
+
+```javascript
+// server.js
+import { createServer } from "node:http";
+import { Server } from "socket.io";
+
+const httpServer = createServer();
+const io = new Server(httpServer, { cors: { origin: process.env.CLIENT_URL } });
+
+io.on("connection", (socket) => {
+  socket.on("join", (conversationId) => socket.join(conversationId));
+
+  socket.on("message", async ({ conversationId, text }) => {
+    const message = await saveMessage(conversationId, socket.data.userId, text); // MongoDB
+    io.to(conversationId).emit("message", message);
+  });
+});
+
+httpServer.listen(4000);
+```
+
+## How do you authenticate a socket connection?
+
+Do it once, during the handshake, with middleware. The client sends its JWT in `auth`, and the server rejects the connection if it is invalid. After that, `socket.data.userId` is trusted for every event.
+
+```javascript
+import jwt from "jsonwebtoken";
+
+io.use((socket, next) => {
+  try {
+    const { token } = socket.handshake.auth;
+    socket.data.userId = jwt.verify(token, process.env.JWT_SECRET).sub;
+    next();
+  } catch {
+    next(new Error("unauthorized"));
+  }
+});
+```
+
+Never trust a `userId` sent inside a message payload — always use the one you verified at connection time.
+
+## Should messages be saved before or after broadcasting?
+
+Save first, then emit. Persisting to MongoDB first gives every message a real ID and timestamp, so all clients render the same thing and nothing is lost if the server crashes mid-broadcast. On the client, you can still show the message optimistically and reconcile it when the server echo arrives.
+
+## What about online status and typing indicators?
+
+These are ephemeral, so don't store them in the database:
+
+- **Typing:** `socket.to(room).emit("typing", userId)` — `socket.to` excludes the sender.
+- **Online:** keep a `Map` of userId to socket count, increment on `connection` and decrement on `disconnect`.
+
+## How do you scale beyond one server?
+
+A single Node.js process handles a lot of connections, but once you run multiple instances, a user on server A can't receive events emitted on server B. The fix is the Redis adapter, which relays events between instances through Redis pub/sub. Pair it with sticky sessions on your load balancer and you can scale horizontally.
+
+## Key takeaways
+
+1. Model each conversation as a room.
+2. Authenticate on the handshake, not per message.
+3. Persist first, broadcast second.
+4. Keep presence and typing in memory, not in the database.
+5. Add the Redis adapter before you add a second server.

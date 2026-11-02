@@ -1,0 +1,96 @@
+---
+title: "7 TypeScript Utility Types I Use Every Day"
+summary: "The TypeScript utility types worth memorising are Partial, Pick, Omit, Record, ReturnType, Awaited and NonNullable — plus the satisfies operator. They let you derive new types from existing ones, so your API payloads, form state and config objects stay in sync automatically instead of being duplicated by hand."
+publishedAt: "2026-10-09"
+tags: ["TypeScript", "JavaScript", "Web Development"]
+faq:
+  - question: "What is the difference between Pick and Omit?"
+    answer: "Pick creates a type with only the keys you list, while Omit creates a type with every key except the ones you list. Use Pick when you need a few fields and Omit when you need almost all of them."
+  - question: "What does the satisfies operator do?"
+    answer: "satisfies checks that a value matches a type without changing the value's inferred type. You get type errors for wrong shapes but keep precise literal types for autocomplete."
+---
+
+The fastest way to make TypeScript less verbose is to stop writing types twice. Utility types let you **derive** types from a single source of truth. These are the ones that show up in almost every project I build.
+
+## 1. Partial — for updates
+
+Makes every property optional. Perfect for PATCH payloads.
+
+```typescript
+type User = { id: string; name: string; email: string };
+
+function updateUser(id: string, changes: Partial<User>) { /* ... */ }
+updateUser("1", { name: "Purvik" }); // ok
+```
+
+## 2. Pick — take only what you need
+
+```typescript
+type UserPreview = Pick<User, "id" | "name">;
+```
+
+## 3. Omit — everything except
+
+Great for "create" inputs where the server generates the ID.
+
+```typescript
+type NewUser = Omit<User, "id">;
+```
+
+## 4. Record — typed dictionaries
+
+```typescript
+type Status = "idle" | "loading" | "error";
+const labels: Record<Status, string> = {
+  idle: "Ready",
+  loading: "Loading…",
+  error: "Something went wrong",
+};
+```
+
+If you add a new `Status`, TypeScript forces you to add its label.
+
+## 5. ReturnType — types from functions
+
+Let the function be the source of truth.
+
+```typescript
+function createStore() {
+  return { count: 0, increment() {} };
+}
+type Store = ReturnType<typeof createStore>;
+```
+
+## 6. Awaited — unwrap promises
+
+```typescript
+async function fetchUser() {
+  const res = await fetch("/api/user");
+  return (await res.json()) as User;
+}
+type FetchedUser = Awaited<ReturnType<typeof fetchUser>>; // User
+```
+
+## 7. NonNullable — remove null and undefined
+
+```typescript
+type MaybeUser = User | null | undefined;
+type DefinitelyUser = NonNullable<MaybeUser>; // User
+```
+
+## Bonus: the satisfies operator
+
+`satisfies` validates a value against a type **without widening it**, so you keep exact literal types.
+
+```typescript
+const routes = {
+  home: "/",
+  blog: "/blog",
+} satisfies Record<string, `/${string}`>;
+
+routes.blog; // type is "/blog", not string
+```
+
+## The rule of thumb
+
+Define each shape **once** — usually your database model or API response — and derive everything else from it. When the source changes, the compiler tells you every place that needs updating.

@@ -1,5 +1,5 @@
-// IMPORTANT: Replace with your own domain address - it's used for SEO in meta tags and schema
-const baseURL = "https://demo.magic-portfolio.com";
+// Canonical production domain - used for canonical URLs, sitemap, Open Graph and JSON-LD
+const baseURL = "https://www.purvik.tech";
 
 const routes = {
   "/": true,

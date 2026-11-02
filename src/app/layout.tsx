@@ -4,22 +4,76 @@ import "./globals.css";
 
 import classNames from "classnames";
 
+import type { Metadata, Viewport } from "next";
 import { Footer, Header, RouteGuard } from "@/components";
-import { baseURL, effects, style, font, home } from "@/app/resources";
+import { baseURL, effects, style, font, home, person } from "@/app/resources";
+import { siteSchema } from "@/app/resources/schema";
 
 import { Background, Column, Flex, ThemeProvider, ToastProvider } from "@/once-ui/components";
 import { opacity, SpacingToken } from "@/once-ui/types";
-import { Meta } from "@/once-ui/modules";
+import { JsonLd, Meta } from "@/once-ui/modules";
 import CursorProvider from "@/components/CursorProvider";
 
-export async function generateMetadata() {
-  return Meta.generate({
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0b0b0c" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+  ],
+};
+
+export async function generateMetadata(): Promise<Metadata> {
+  const base = Meta.generate({
     title: home.title,
     description: home.description,
     baseURL: baseURL,
     path: home.path,
-    image: home.image,
+    keywords: [
+      "Purvik Sharma",
+      "Purvik",
+      "full stack developer",
+      "full stack developer Jaipur",
+      "Next.js developer India",
+      "React developer",
+      "MERN stack developer",
+      "portfolio",
+    ],
   });
+
+  return {
+    ...base,
+    metadataBase: new URL(baseURL),
+    title: {
+      default: home.title,
+      template: `%s | ${person.name}`,
+    },
+    applicationName: `${person.name} Portfolio`,
+    creator: person.name,
+    publisher: person.name,
+    authors: [{ name: person.name, url: baseURL }],
+    category: "technology",
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
+    },
+    alternates: {
+      ...base.alternates,
+      types: { "application/rss+xml": `${baseURL}/rss.xml` },
+    },
+    // Paste the tokens from Google Search Console / Bing Webmaster Tools into your env vars
+    verification: {
+      ...(process.env.GOOGLE_SITE_VERIFICATION && { google: process.env.GOOGLE_SITE_VERIFICATION }),
+      ...(process.env.BING_SITE_VERIFICATION && {
+        other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION },
+      }),
+    },
+  };
 }
 
 interface RootLayoutProps {
@@ -69,6 +123,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             `,
           }}
         />
+        <JsonLd id="schema-site" data={siteSchema()} />
       </head>
       <ThemeProvider>
         <ToastProvider>

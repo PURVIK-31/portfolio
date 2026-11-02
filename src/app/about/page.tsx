@@ -45,7 +45,7 @@ export default function About() {
     {
       title: about.work.title,
       display: about.work.display,
-      items: about.work.experiences.map((experience) => experience.company),
+      items: [...new Set(about.work.experiences.map((experience) => experience.company))],
     },
     {
       title: about.studies.title,
@@ -61,12 +61,14 @@ export default function About() {
   return (
     <Column maxWidth="m">
       <Schema
-        as="webPage"
+        as="profilePage"
         baseURL={baseURL}
         title={about.title}
         description={about.description}
         path={about.path}
-        image={`${baseURL}/og?title=${encodeURIComponent(about.title)}`}
+        image={`${baseURL}${person.avatar}`}
+        breadcrumbs={[{ name: "About", path: about.path }]}
+        extra={{ mainEntity: { "@id": `${baseURL}/#person` } }}
         author={{
           name: person.name,
           url: `${baseURL}${about.path}`,
@@ -198,19 +200,29 @@ export default function About() {
                 {about.work.title}
               </Heading>
               <Column fillWidth gap="l" marginBottom="40">
-                {about.work.experiences.map((experience, index) => (
+                {about.work.experiences.map((experience, index, all) => {
+                  // A company with several roles gets one anchor (for the table of contents)
+                  const firstOfCompany = all.findIndex((e) => e.company === experience.company) === index;
+                  return (
                   <Column key={`${experience.company}-${experience.role}-${index}`} fillWidth>
-                    <Flex fillWidth horizontal="space-between" vertical="end" marginBottom="4">
-                      <Text id={experience.company} variant="heading-strong-l">
+                    <Flex fillWidth horizontal="space-between" vertical="end" marginBottom="4" gap="16" mobileDirection="column">
+                      <Text id={firstOfCompany ? experience.company : undefined} variant="heading-strong-l">
                         {experience.company}
                       </Text>
-                      <Text variant="heading-default-xs" onBackground="neutral-weak">
+                      <Text variant="heading-default-xs" onBackground="neutral-weak" style={{ whiteSpace: "nowrap" }}>
                         {experience.timeframe}
                       </Text>
                     </Flex>
-                    <Text variant="body-default-s" onBackground="brand-weak" marginBottom="m">
+                    <Text variant="body-default-s" onBackground="brand-weak" marginBottom={experience.achievements.length ? "m" : undefined}>
                       {experience.role}
+                      {experience.location && (
+                        <Text as="span" onBackground="neutral-weak">
+                          {" · "}
+                          {experience.location}
+                        </Text>
+                      )}
                     </Text>
+                    {experience.achievements.length > 0 && (
                     <Column as="ul" gap="16">
                       {experience.achievements.map((achievement: JSX.Element, index: number) => (
                         <Text
@@ -222,6 +234,7 @@ export default function About() {
                         </Text>
                       ))}
                     </Column>
+                    )}
                     {experience.images.length > 0 && (
                       <Flex fillWidth paddingTop="m" paddingLeft="40" wrap>
                         {experience.images.map((image: ImageType, index) => (
@@ -244,7 +257,8 @@ export default function About() {
                       </Flex>
                     )}
                   </Column>
-                ))}
+                  );
+                })}
               </Column>
             </>
           )}

@@ -26,6 +26,11 @@ import {
   HiMoon,
   HiSun,
   HiOutlineDocument,
+  HiCodeBracket,
+  HiRss,
+  HiSparkles,
+  HiOutlineClock,
+  HiOutlineMapPin,
 } from "react-icons/hi2";
 
 import {
@@ -37,6 +42,7 @@ import {
 } from "react-icons/pi";
 
 import { FaDiscord, FaGithub, FaLinkedin, FaX } from "react-icons/fa6";
+import { SiLeetcode } from "react-icons/si";
 
 export const iconLibrary: Record<string, IconType> = {
   chevronUp: HiChevronUp,
@@ -73,6 +79,12 @@ export const iconLibrary: Record<string, IconType> = {
   moon: HiMoon,
   sun: HiSun,
   document: HiOutlineDocument,
+  code: HiCodeBracket,
+  leetcode: SiLeetcode,
+  rss: HiRss,
+  sparkles: HiSparkles,
+  clock: HiOutlineClock,
+  mapPin: HiOutlineMapPin,
 };
 
 export type IconLibrary = typeof iconLibrary;

@@ -1,12 +1,33 @@
 .hover {
-    border: 1px solid var(--static-transparent);
+  border: 1px solid var(--neutral-alpha-weak);
+  background: var(--surface-background);
+  height: 100%;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
 
-    &:hover {
-        border: 1px solid var(--neutral-alpha-medium);
-    }
+  &:hover {
+    border-color: var(--brand-alpha-medium);
+    transform: translateY(-2px);
+  }
+}
+
+.summary {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .image {
-    transition: var(--transition-micro-medium);
-    transform: scale(1);
+  transition: var(--transition-micro-medium);
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover,
+  .hover:hover {
+    transition: none;
+    transform: none;
+  }
 }

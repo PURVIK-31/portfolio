@@ -28,14 +28,16 @@
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
     "sass": "^1.86.3",
-    "sharp": "^0.34.1"
+    "sharp": "^0.34.1",
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@csstools/postcss-global-data": "^2.1.1",
     "@types/cookie": "^0.6.0",
     "@types/node": "^20.17.30",
-    "@types/react": "^18.3.20",
-    "@types/react-dom": "^18.3.6",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@types/three": "^0.180.0",
     "eslint": "^9.25.0",
     "postcss-custom-media": "^10.0.8",
     "postcss-flexbugs-fixes": "^5.0.2",

@@ -1,0 +1,73 @@
+---
+title: "Website Ingestion Pipeline (Web Crawler)"
+publishedAt: "2026-07-23"
+summary: "A polite, modular Python crawler that turns any website into an analysis-ready dataset — clean text, images and links exported as Parquet, CSV or JSONL — for RAG, AI training, knowledge bases or SEO analysis. Runs as a CLI, a FastAPI service or in Docker."
+images:
+  - "/images/projects/website-crawler.png"
+team:
+  - name: "Purvik Sharma"
+    role: "Full Stack Developer"
+    avatar: "/images/avatar.jpg"
+    linkedIn: "https://www.linkedin.com/in/purviksharma/"
+link: "https://github.com/PURVIK-31/website-crawler"
+tags: ["Python", "FastAPI", "Playwright", "aiohttp", "Docker", "Data Engineering"]
+---
+
+## Overview
+
+The Website Ingestion Pipeline crawls a website starting from a single URL, extracts the content that is actually useful — readable text, headings, metadata, images and links — and writes it out as a structured dataset. The goal was a tool I could point at a documentation site or blog and get back data that is ready for a RAG pipeline, a knowledge base or an SEO audit, without hand-writing a scraper each time.
+
+It can be used three ways: as a **command-line tool**, as a **FastAPI service** that runs crawl jobs in the background, or as a **Docker container**.
+
+## Key Features
+
+- **Breadth-first, same-site crawling** with URL normalisation, tracking-parameter removal, deduplication, and configurable depth and page limits.
+- **Polite by default**: respects `robots.txt`, rotates user agents, applies a configurable delay between requests and retries failures with exponential backoff.
+- **JavaScript-heavy pages**: fetches statically with aiohttp, and falls back to headless Chromium via Playwright for pages that likely need rendering.
+- **Clean text extraction**: title, headings, meta description, readable body text (via readability), timestamp and word count for every page.
+- **Image handling**: collects image metadata, optionally downloads images, filters out tiny ones and removes near-duplicates with perceptual hashing.
+- **Flexible exports**: Parquet, CSV or JSONL datasets, plus Markdown exports, raw-HTML archives, a crawl report and a SHA-256 manifest for integrity checks.
+- **Job API**: create crawl jobs, poll their status and download results over HTTP, with interactive docs at `/docs`.
+
+## How It Works
+
+1. **Frontier** — a queue of normalised, de-duplicated URLs explored breadth-first from the seed, restricted to the same domain.
+2. **Fetch** — asynchronous HTTP requests with aiohttp, rate-limited and retried; pages that look client-rendered are re-fetched with Playwright.
+3. **Parse & extract** — Beautiful Soup and lxml parse the HTML, readability isolates the main content, and extractors pull text, images and links.
+4. **Store** — pandas and PyArrow write the pages and images tables, alongside the report, manifest and archives.
+
+```bash
+python main.py --url https://example.com --depth 2 --limit 50 --format parquet
+```
+
+```bash
+docker compose up -d
+curl -X POST http://localhost:8000/api/crawl
+```
+
+## Technologies Used
+
+- **Runtime & CLI**: Python 3.11+, Typer, Rich
+- **Crawling**: aiohttp, urllib.robotparser
+- **Parsing**: Beautiful Soup, lxml, readability-lxml, chardet
+- **Dynamic rendering**: Playwright with Chromium
+- **Data & images**: pandas, PyArrow, Pillow, imagehash
+- **API & validation**: FastAPI, Uvicorn, Pydantic
+- **Logging & deployment**: structlog, Docker, Docker Compose, GitHub Actions
+- **Docs**: MkDocs with architecture decision records (ADRs)
+
+## Challenges and Solutions
+
+**Knowing when a browser is needed.** Running Chromium for every page is slow and memory-hungry, but plain HTTP misses content on client-rendered sites. The pipeline fetches statically first and only escalates to Playwright when a page looks JavaScript-dependent, keeping most crawls fast while still handling modern sites.
+
+**Avoiding duplicate work.** The same page often appears under many URLs — with tracking parameters, fragments or trailing slashes. Normalising URLs before they enter the frontier, and de-duplicating images by perceptual hash, keeps both the crawl and the dataset lean.
+
+**Being a good citizen.** A crawler can easily overload a small site. Conservative defaults, `robots.txt` checks, an enforced request delay and exponential backoff make the tool safe to run against sites you are authorised to crawl.
+
+## Testing
+
+The project ships with a pytest suite of 43 tests covering the extractors, URL frontier, HTML parser and the knowledge-ingestion pipeline (chunking, caching and asset persistence).
+
+## What's Next
+
+The v2 architecture and roadmap are documented in the repository. Next steps include persistent job storage so API jobs survive restarts, authentication and tighter CORS for production deployments, and enforcing `robots.txt` crawl-delay automatically.

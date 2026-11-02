@@ -1,12 +1,12 @@
 "use client";
 
 import {
-  AvatarGroup,
   Carousel,
   Column,
   Flex,
   Heading,
   SmartLink,
+  Tag,
   Text,
 } from "@/once-ui/components";
 
@@ -17,7 +17,7 @@ interface ProjectCardProps {
   title: string;
   content: string;
   description: string;
-  avatars: { src: string }[];
+  tags?: string[];
   link: string;
 }
 
@@ -27,7 +27,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   title,
   content,
   description,
-  avatars,
+  tags = [],
   link,
 }) => {
   return (
@@ -36,7 +36,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         sizes="(max-width: 960px) 100vw, 960px"
         images={images.map((image) => ({
           src: image,
-          alt: title,
+          alt: `Screenshot of ${title}`,
         }))}
       />
       <Flex
@@ -54,13 +54,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             </Heading>
           </Flex>
         )}
-        {(avatars?.length > 0 || description?.trim() || content?.trim()) && (
+        {(tags.length > 0 || description?.trim() || content?.trim()) && (
           <Column flex={7} gap="16">
-            {avatars?.length > 0 && <AvatarGroup avatars={avatars} size="m" reverse />}
             {description?.trim() && (
               <Text wrap="balance" variant="body-default-s" onBackground="neutral-weak">
                 {description}
               </Text>
+            )}
+            {tags.length > 0 && (
+              <Flex gap="8" wrap>
+                {tags.slice(0, 5).map((tag) => (
+                  <Tag key={tag} label={tag} size="s" variant="neutral" />
+                ))}
+              </Flex>
             )}
             <Flex gap="24" wrap>
               {content?.trim() && (
@@ -78,7 +84,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                   style={{ margin: "0", width: "fit-content" }}
                   href={link}
                 >
-                  <Text variant="body-default-s">View project</Text>
+                  <Text variant="body-default-s">Source code</Text>
                 </SmartLink>
               )}
             </Flex>

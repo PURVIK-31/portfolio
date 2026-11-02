@@ -1,0 +1,72 @@
+---
+title: "HD Wallets Explained: One Seed Phrase, Many Blockchains"
+summary: "A hierarchical deterministic (HD) wallet turns one 12 or 24-word seed phrase (BIP39) into a tree of keys (BIP32), and a derivation path (BIP44) picks the branch for each blockchain — m/44'/60'/0'/0/0 for Ethereum and m/44'/501'/0'/0' for Solana. That is how one phrase can restore accounts on many chains."
+publishedAt: "2026-10-29"
+tags: ["Web3", "Ethereum", "Solana", "TypeScript"]
+faq:
+  - question: "What is a derivation path?"
+    answer: "A derivation path such as m/44'/60'/0'/0/0 is an address inside the HD key tree. The numbers mean purpose (44 for BIP44), coin type (60 for Ethereum, 501 for Solana), account, change and address index. The apostrophe marks hardened derivation."
+  - question: "Is it safe to generate a seed phrase in the browser?"
+    answer: "It can be, if keys are generated with a cryptographically secure random source, never leave the device and are never sent to a server or logged. For real funds, a hardware wallet is still the safer choice."
+---
+
+While building my [web-based crypto wallet](/work/web-wallet-cryptocurrency), the most interesting part was understanding how **one seed phrase** can control accounts on both Ethereum and Solana. The answer is three standards stacked on top of each other.
+
+## What is BIP39?
+
+BIP39 turns random entropy into a human-readable **mnemonic** (12 or 24 words) and then into a 512-bit **seed**. The words are just an encoding — the seed is what actually produces keys.
+
+```typescript
+import { generateMnemonic, mnemonicToSeedSync } from "bip39";
+
+const mnemonic = generateMnemonic(); // 12 words, 128 bits of entropy
+const seed = mnemonicToSeedSync(mnemonic); // 64-byte seed
+```
+
+## What is BIP32?
+
+BIP32 defines how to derive a whole **tree** of child keys from that seed. Each child is computed deterministically, so the same seed always produces the same tree. That is why restoring a wallet on a new device brings back every account.
+
+## What is BIP44?
+
+BIP44 gives the tree a standard layout so wallets agree on where each coin lives:
+
+`m / purpose' / coin_type' / account' / change / address_index`
+
+- Ethereum uses coin type **60**: `m/44'/60'/0'/0/0`
+- Solana uses coin type **501**: `m/44'/501'/0'/0'`
+
+## Deriving an Ethereum address
+
+```typescript
+import { HDNodeWallet } from "ethers";
+
+const wallet = HDNodeWallet.fromPhrase(mnemonic, undefined, "m/44'/60'/0'/0/0");
+console.log(wallet.address); // 0x...
+```
+
+## Deriving a Solana address
+
+Solana uses Ed25519 keys, so it needs SLIP-0010 style derivation where every level is hardened:
+
+```typescript
+import { derivePath } from "ed25519-hd-key";
+import { Keypair } from "@solana/web3.js";
+
+const { key } = derivePath("m/44'/501'/0'/0'", seed.toString("hex"));
+const keypair = Keypair.fromSeed(key);
+console.log(keypair.publicKey.toBase58());
+```
+
+To create a second account, increment the account index — `m/44'/501'/1'/0'` — and you get a completely new keypair from the same phrase.
+
+## Security rules I followed
+
+- All cryptography runs **client-side**; the seed never touches a server.
+- Never log the mnemonic or private keys, even in development.
+- Use well-audited libraries instead of hand-rolling crypto.
+- Make it obvious to users that whoever has the phrase owns the funds.
+
+## Summary
+
+BIP39 creates the seed, BIP32 grows the key tree, and BIP44 tells you which branch belongs to which chain. Once that clicks, multi-chain wallets stop feeling like magic.

@@ -1,0 +1,116 @@
+---
+title: "Dockerizing a MERN App with Docker Compose"
+summary: "To dockerize a MERN app, write a small multi-stage Dockerfile for the Node.js API, build the React frontend into static files served by Nginx, and use Docker Compose to run the API, frontend and MongoDB together with a named volume for data and environment variables for secrets."
+publishedAt: "2026-10-17"
+tags: ["Docker", "DevOps", "Node.js", "MongoDB"]
+faq:
+  - question: "Why use multi-stage Docker builds?"
+    answer: "A multi-stage build installs dev dependencies and compiles in one stage, then copies only the output and production dependencies into a slim final image. The result is smaller, faster to pull and has fewer packages that could contain vulnerabilities."
+  - question: "Should MongoDB run in Docker in production?"
+    answer: "It works, but for production most teams use a managed service such as MongoDB Atlas for backups, replication and monitoring. Docker Compose with a local MongoDB container is ideal for development and small self-hosted projects."
+---
+
+"It works on my machine" stops being a problem once your whole stack runs in containers. Here is the minimal Docker setup I use for MERN projects: one command to start the API, the React app and MongoDB.
+
+## Project layout
+
+```bash
+my-app/
+  api/        # Express + Mongoose
+  client/     # React (Vite)
+  docker-compose.yml
+```
+
+## Dockerfile for the Node.js API
+
+A multi-stage build keeps the final image small:
+
+```docker
+# api/Dockerfile
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+USER node
+EXPOSE 4000
+CMD ["node", "src/index.js"]
+```
+
+Add a `.dockerignore` with `node_modules` and `.env` so you don't copy them into the image.
+
+## Dockerfile for the React frontend
+
+Build static files with Node, then serve them with Nginx:
+
+```docker
+# client/Dockerfile
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
+```
+
+## docker-compose.yml
+
+```yaml
+services:
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo-data:/data/db
+
+  api:
+    build: ./api
+    environment:
+      MONGO_URL: mongodb://mongo:27017/app
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      - mongo
+    ports:
+      - "4000:4000"
+
+  client:
+    build: ./client
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  mongo-data:
+```
+
+Two details matter here:
+
+- **Service names are hostnames.** The API connects to `mongodb://mongo:27017`, not `localhost`.
+- **Named volumes keep data.** Without `mongo-data`, your database is wiped every time the container is recreated.
+
+## Run it
+
+```bash
+JWT_SECRET=change-me docker compose up --build
+```
+
+The React app is on `localhost:3000`, the API on `localhost:4000`.
+
+## Checklist
+
+- Multi-stage builds and a `.dockerignore`.
+- Run as a non-root user (`USER node`).
+- Secrets from environment variables, never baked into images.
+- Named volume for MongoDB.
+- Pin image versions (`node:20-alpine`, `mongo:7`) instead of `latest`.
+
+From here, the same images can be pushed to a registry and deployed to any container platform or Kubernetes cluster.

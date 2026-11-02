@@ -1,0 +1,74 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  // Lets clicks pass through to page content; the scene follows the pointer via document events
+  pointer-events: none;
+
+  @media (max-width: 768px) {
+    height: 340px;
+  }
+}
+
+.glow {
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--brand-alpha-medium) 0%, var(--brand-alpha-weak) 35%, transparent 70%);
+  filter: blur(24px);
+}
+
+.chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--font-code);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--neutral-on-background-strong);
+  background: var(--neutral-alpha-weak);
+  border: 1px solid var(--neutral-alpha-medium);
+  backdrop-filter: blur(10px);
+  animation: float 6s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+.chipDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand-solid-strong);
+  box-shadow: 0 0 8px var(--brand-solid-strong);
+}
+
+.chip1 { top: 8%; left: 6%; }
+.chip2 { top: 16%; right: 2%; }
+.chip3 { bottom: 20%; left: 0; }
+.chip4 { bottom: 8%; right: 10%; }
+.chip5 { top: 50%; right: -2%; }
+
+@media (max-width: 768px) {
+  .chip3,
+  .chip5 {
+    display: none;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip {
+    animation: none;
+  }
+}

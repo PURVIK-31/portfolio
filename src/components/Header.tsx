@@ -76,7 +76,7 @@ export const Header = () => {
           >
             <Flex gap="4" vertical="center" textVariant="body-default-s">
               {routes["/"] && (
-                <ToggleButton prefixIcon="home" href="/" selected={pathname === "/"} />
+                <ToggleButton prefixIcon="home" href="/" aria-label="Home" selected={pathname === "/"} />
               )}
               <Line background="neutral-alpha-medium" vert maxHeight="24" />
               {routes["/about"] && (
@@ -92,6 +92,7 @@ export const Header = () => {
                     className="s-flex-show"
                     prefixIcon="person"
                     href="/about"
+                    aria-label="About"
                     selected={pathname === "/about"}
                   />
                 </>
@@ -109,6 +110,7 @@ export const Header = () => {
                     className="s-flex-show"
                     prefixIcon="grid"
                     href="/work"
+                    aria-label="Work"
                     selected={pathname.startsWith("/work")}
                   />
                 </>
@@ -126,6 +128,7 @@ export const Header = () => {
                     className="s-flex-show"
                     prefixIcon="book"
                     href="/blog"
+                    aria-label="Blog"
                     selected={pathname.startsWith("/blog")}
                   />
                 </>

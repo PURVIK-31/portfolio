@@ -1,0 +1,80 @@
+---
+title: "Building a Stock Dashboard with Python, Streamlit and yfinance"
+summary: "You can build an interactive stock dashboard in under 100 lines of Python: fetch prices with yfinance, compute indicators like SMA 20, EMA 20 and RSI 14 with pandas, plot candlesticks with Plotly, and wrap it all in Streamlit widgets with caching so data refreshes without hammering the API."
+publishedAt: "2026-10-05"
+tags: ["Python", "Streamlit", "Data Visualization", "Finance"]
+faq:
+  - question: "How is RSI calculated?"
+    answer: "RSI compares average gains to average losses over a period, usually 14. RSI = 100 - 100 / (1 + RS), where RS is the smoothed average gain divided by the smoothed average loss. Values above 70 are often read as overbought and below 30 as oversold."
+  - question: "What is the difference between SMA and EMA?"
+    answer: "A Simple Moving Average gives equal weight to every price in the window. An Exponential Moving Average gives more weight to recent prices, so it reacts faster to new moves."
+---
+
+My [real-time stock analysis dashboard](/work/stock) started as a weekend experiment: could I get TradingView-style charts with indicators using only Python? Streamlit made it surprisingly quick. Here is the core of how it works.
+
+## Step 1: fetch price data
+
+`yfinance` pulls historical OHLCV data from Yahoo Finance. Wrap it in `st.cache_data` with a TTL so repeated interactions don't refetch every time.
+
+```python
+import streamlit as st
+import yfinance as yf
+
+@st.cache_data(ttl=60)
+def load(ticker: str, period: str):
+    return yf.Ticker(ticker).history(period=period)
+
+ticker = st.sidebar.text_input("Ticker", "AAPL")
+period = st.sidebar.selectbox("Period", ["1mo", "3mo", "6mo", "1y"])
+df = load(ticker, period)
+```
+
+## Step 2: compute indicators with pandas
+
+```python
+df["SMA20"] = df["Close"].rolling(20).mean()
+df["EMA20"] = df["Close"].ewm(span=20, adjust=False).mean()
+
+delta = df["Close"].diff()
+gain = delta.clip(lower=0).ewm(alpha=1/14, adjust=False).mean()
+loss = (-delta.clip(upper=0)).ewm(alpha=1/14, adjust=False).mean()
+df["RSI14"] = 100 - 100 / (1 + gain / loss)
+```
+
+The `alpha=1/14` exponential smoothing is Wilder's method, which is what most charting platforms use for RSI.
+
+## Step 3: plot with Plotly
+
+```python
+import plotly.graph_objects as go
+
+fig = go.Figure([
+    go.Candlestick(x=df.index, open=df["Open"], high=df["High"],
+                   low=df["Low"], close=df["Close"], name=ticker),
+    go.Scatter(x=df.index, y=df["SMA20"], name="SMA 20"),
+    go.Scatter(x=df.index, y=df["EMA20"], name="EMA 20"),
+])
+fig.update_layout(xaxis_rangeslider_visible=False, height=520)
+st.plotly_chart(fig, use_container_width=True)
+
+st.line_chart(df["RSI14"])
+```
+
+## Step 4: show the headline numbers
+
+```python
+last, prev = df["Close"].iloc[-1], df["Close"].iloc[-2]
+st.metric(ticker, f"{last:.2f}", f"{(last - prev) / prev:.2%}")
+```
+
+## Step 5: deploy
+
+Push the repo to GitHub with a `requirements.txt` and deploy it on Streamlit Community Cloud — it builds and hosts the app for free.
+
+## What I'd add next
+
+- Compare multiple tickers on one chart.
+- Alerts when RSI crosses 30 or 70.
+- Volume bars on a secondary axis.
+
+Streamlit is ideal for data tools like this: you write plain Python and get a usable UI for free. Just remember a dashboard like this is for learning and analysis, not financial advice.

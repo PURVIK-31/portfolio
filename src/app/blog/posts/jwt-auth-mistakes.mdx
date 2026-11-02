@@ -1,0 +1,68 @@
+---
+title: "JWT Authentication in Express: 6 Mistakes to Avoid"
+summary: "Most JWT bugs come from six mistakes: storing tokens in localStorage, using long-lived access tokens, not pinning the signing algorithm, weak secrets, putting sensitive data in the payload, and having no way to revoke sessions. Use short-lived access tokens, httpOnly refresh-token cookies and explicit verification options."
+publishedAt: "2026-10-21"
+tags: ["Node.js", "Security", "Express", "Authentication"]
+faq:
+  - question: "Where should I store a JWT in the browser?"
+    answer: "Prefer an httpOnly, Secure, SameSite cookie, which JavaScript cannot read, so an XSS bug cannot steal it. If you must keep an access token in JavaScript, keep it in memory only and keep it short-lived."
+  - question: "Can you invalidate a JWT before it expires?"
+    answer: "Not by itself, because JWTs are stateless. Keep access tokens short-lived and store refresh tokens (or a token version per user) in the database so you can revoke them on logout or password change."
+---
+
+JWTs are everywhere in MERN apps, including a couple of mine. They are easy to add and surprisingly easy to get wrong. These are the six mistakes I see (and have made) most often.
+
+## 1. Storing tokens in localStorage
+
+Anything in `localStorage` is readable by any script on the page, so a single XSS bug leaks every session. Put the refresh token in an **httpOnly** cookie instead:
+
+```javascript
+res.cookie("refresh_token", refreshToken, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "strict",
+  path: "/api/auth/refresh",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+});
+```
+
+## 2. Long-lived access tokens
+
+A token that is valid for 30 days is a 30-day skeleton key if it leaks. Use a **short access token** (around 15 minutes) and a longer refresh token that can be rotated and revoked.
+
+## 3. Not pinning the algorithm
+
+Always tell the library which algorithm you expect, so a token signed some other way is rejected:
+
+```javascript
+const payload = jwt.verify(token, process.env.JWT_SECRET, {
+  algorithms: ["HS256"],
+  issuer: "api.example.com",
+});
+```
+
+## 4. Weak or committed secrets
+
+`"secret123"` can be brute-forced offline from a single token. Generate a long random secret, keep it in environment variables and never commit `.env` files.
+
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+## 5. Putting sensitive data in the payload
+
+A JWT payload is **base64-encoded, not encrypted** — anyone holding the token can read it. Store only an ID (`sub`) and maybe a role. Never emails, phone numbers or permissions you don't want exposed.
+
+## 6. No way to revoke sessions
+
+Because JWTs are stateless, logging out on the client doesn't kill the token. Store refresh tokens (or a `tokenVersion` on the user) in the database, check it on refresh, and bump it when a user logs out everywhere or changes their password.
+
+## A safe default setup
+
+1. 15-minute access token, kept in memory on the client.
+2. 7-day refresh token in an httpOnly, Secure, SameSite cookie.
+3. Refresh-token rotation, with tokens stored and revocable server-side.
+4. `jwt.verify` with explicit `algorithms`.
+5. HTTPS everywhere.
+
+This isn't much more code than the naive version, and it closes the most common holes.

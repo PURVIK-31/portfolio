@@ -1,0 +1,88 @@
+---
+title: "Monitoring a Node.js API with Prometheus and Grafana"
+summary: "To monitor a Node.js API, expose a /metrics endpoint with the prom-client library, record request counts and latency in a histogram, let Prometheus scrape that endpoint every few seconds, and build Grafana dashboards for request rate, error rate and p95 latency."
+publishedAt: "2026-10-13"
+tags: ["DevOps", "Node.js", "Prometheus", "Grafana"]
+faq:
+  - question: "What is the difference between Prometheus and Grafana?"
+    answer: "Prometheus collects and stores metrics as time series by scraping your services, and lets you query them with PromQL. Grafana is a visualisation layer that queries Prometheus (and other sources) to build dashboards and alerts."
+  - question: "Which metrics should every API track?"
+    answer: "Start with the RED method: Rate (requests per second), Errors (failed requests per second) and Duration (latency, usually as p50, p95 and p99 from a histogram)."
+---
+
+Logs tell you *what* happened. Metrics tell you *how much* and *how fast* — and they let you spot a problem before users report it. Prometheus and Grafana are the standard open-source pair for this, and wiring them into an Express API takes about 30 lines.
+
+## Step 1: expose metrics from Express
+
+```javascript
+import express from "express";
+import client from "prom-client";
+
+const app = express();
+client.collectDefaultMetrics(); // CPU, memory, event loop lag...
+
+const httpDuration = new client.Histogram({
+  name: "http_request_duration_seconds",
+  help: "HTTP request latency",
+  labelNames: ["method", "route", "status"],
+  buckets: [0.05, 0.1, 0.25, 0.5, 1, 2.5],
+});
+
+app.use((req, res, next) => {
+  const end = httpDuration.startTimer();
+  res.on("finish", () => {
+    end({ method: req.method, route: req.route?.path ?? "unknown", status: res.statusCode });
+  });
+  next();
+});
+
+app.get("/metrics", async (_req, res) => {
+  res.set("Content-Type", client.register.contentType);
+  res.end(await client.register.metrics());
+});
+```
+
+Use the **route pattern** (`/users/:id`), not the raw URL, as a label. Raw URLs create a new time series for every ID and can overwhelm Prometheus.
+
+## Step 2: let Prometheus scrape it
+
+```yaml
+# prometheus.yml
+scrape_configs:
+  - job_name: "node-api"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["api:4000"]
+```
+
+## Step 3: useful PromQL queries
+
+Request rate per second:
+
+```bash
+sum(rate(http_request_duration_seconds_count[5m]))
+```
+
+Error rate (5xx responses):
+
+```bash
+sum(rate(http_request_duration_seconds_count{status=~"5.."}[5m]))
+```
+
+95th percentile latency:
+
+```bash
+histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))
+```
+
+## Step 4: build the Grafana dashboard
+
+Add Prometheus as a data source in Grafana, then create three panels with the queries above: **rate, errors, duration** (the RED method). Add a panel for event-loop lag from the default metrics — it is the earliest sign that a Node.js process is overloaded.
+
+## Step 5: alert on symptoms, not causes
+
+Alert when users feel pain — for example p95 latency above 1 second for 5 minutes, or error rate above 2% — rather than on CPU spikes that may be harmless.
+
+## Summary
+
+`prom-client` exposes metrics, Prometheus scrapes and stores them, Grafana visualises them. Start with RED metrics and one dashboard; it is enough to catch most production issues early.

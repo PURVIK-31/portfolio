@@ -1,0 +1,72 @@
+---
+title: "5 Core Web Vitals Quick Wins for Next.js Sites"
+summary: "The fastest Core Web Vitals wins in Next.js are: mark the hero image as priority with correct sizes, load fonts with next/font, keep components on the server to ship less JavaScript, lazy-load heavy client widgets with next/dynamic, and reserve space for anything that loads late to avoid layout shift."
+publishedAt: "2026-10-25"
+tags: ["Next.js", "Performance", "Core Web Vitals", "React"]
+faq:
+  - question: "What are good Core Web Vitals scores?"
+    answer: "Google considers a page good when Largest Contentful Paint is 2.5 seconds or less, Interaction to Next Paint is 200 milliseconds or less, and Cumulative Layout Shift is 0.1 or less, measured at the 75th percentile of real users."
+  - question: "Does Core Web Vitals affect SEO ranking?"
+    answer: "Yes, Core Web Vitals are part of Google's page experience signals. They are not the strongest ranking factor, but they can be a tie-breaker between similarly relevant pages and they directly affect bounce rate."
+---
+
+During my internship I worked on landing pages where performance directly affected sign-ups. Most of the improvement came from a handful of boring, repeatable fixes. Here are the five I reach for first in any Next.js project.
+
+## 1. Prioritise the LCP image
+
+The **Largest Contentful Paint** element is usually the hero image. Tell Next.js to preload it and give it accurate `sizes`, so the browser downloads the right file immediately.
+
+```tsx
+import Image from "next/image";
+
+<Image
+  src="/hero.webp"
+  alt="Product dashboard"
+  width={1200}
+  height={630}
+  priority
+  sizes="(max-width: 768px) 100vw, 1200px"
+/>
+```
+
+Only use `priority` on one or two above-the-fold images — not on everything.
+
+## 2. Load fonts with next/font
+
+`next/font` self-hosts fonts, inlines the CSS and sets fallback metrics, which removes a network round-trip and stops text from jumping when the web font swaps in.
+
+```tsx
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"], display: "swap" });
+```
+
+## 3. Keep components on the server
+
+In the App Router, components are Server Components by default. Every `"use client"` you add ships JavaScript that must download, parse and hydrate — which hurts **Interaction to Next Paint**. Push `"use client"` down to the smallest interactive leaf (a button, a form) instead of marking whole pages as client components.
+
+## 4. Lazy-load heavy client widgets
+
+Charts, editors, maps and 3D scenes rarely need to be in the first paint.
+
+```tsx
+import dynamic from "next/dynamic";
+
+const Chart = dynamic(() => import("./Chart"), {
+  ssr: false,
+  loading: () => <div style={{ height: 320 }} />,
+});
+```
+
+Note the placeholder has a fixed height — which leads to the last tip.
+
+## 5. Reserve space to avoid layout shift
+
+**Cumulative Layout Shift** happens when content moves after it renders. Common causes are images without dimensions, late-loading embeds and banners injected at the top. Always give media explicit `width`/`height` or an `aspect-ratio`, and give skeletons the same size as the content they replace.
+
+## How to measure
+
+- **Lab:** Lighthouse in Chrome DevTools for quick checks while developing.
+- **Field:** the Core Web Vitals report in Google Search Console and PageSpeed Insights, which use real-user data — this is what Google actually ranks on.
+
+Fix the LCP image and trim client JavaScript first; those two usually move the needle the most.

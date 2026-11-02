@@ -5,9 +5,12 @@ export interface MetaProps {
   description: string;
   baseURL: string;
   path?: string;
-  type?: "website" | "article";
+  type?: "website" | "article" | "profile";
   image?: string;
   publishedTime?: string;
+  modifiedTime?: string;
+  tags?: string[];
+  keywords?: string[];
   author?: {
     name: string;
     url?: string;
@@ -22,10 +25,13 @@ export function generateMetadata({
   type = "website",
   image,
   publishedTime,
+  modifiedTime,
+  tags,
+  keywords,
   author,
 }: MetaProps): NextMetadata {
   const normalizedBaseURL = baseURL.endsWith("/") ? baseURL.slice(0, -1) : baseURL;
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const normalizedPath = path === "/" || path === "" ? "" : path.startsWith("/") ? path : `/${path}`;
 
   const isFullUrl = (url: string) => /^https?:\/\//.test(url);
 
@@ -40,15 +46,30 @@ export function generateMetadata({
   return {
     title,
     description,
+    ...(keywords || tags ? { keywords: [...(keywords || []), ...(tags || [])] } : {}),
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title,
       description,
       type,
-      ...(publishedTime && type === "article" ? { publishedTime } : {}),
       url,
+      siteName: "Purvik Sharma",
+      locale: "en_IN",
+      ...(type === "article"
+        ? {
+            ...(publishedTime ? { publishedTime } : {}),
+            ...(modifiedTime ? { modifiedTime } : {}),
+            ...(tags ? { tags } : {}),
+            ...(author ? { authors: [author.url || author.name] } : {}),
+          }
+        : {}),
       images: [
         {
           url: ogImage,
+          width: 1920,
+          height: 1080,
           alt: title,
         },
       ],
